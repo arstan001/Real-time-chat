@@ -4,9 +4,9 @@ import Chat from './components/Chat';
 function App() {
   return (
     <SocketProvider>
-    <div className="App">
-      <Chat/>
-    </div>
+      <div className="App">
+        <Chat/>
+      </div>
     </SocketProvider>
   );
 }
