@@ -4,9 +4,11 @@ import logger from "./utils/logger";
 
 const EVENTS = {
     connection: "connection",
+    disconnecting:'disconnecting',
     CLIENT: {
       SEND_ROOM_MESSAGE: "SEND_ROOM_MESSAGE",
       JOIN_ROOM: "JOIN_ROOM",
+      LEAVE_ROOM:'LEAVE_ROOM'
     },
     SERVER: {
       JOINED_ROOM: "JOINED_ROOM",
@@ -14,9 +16,11 @@ const EVENTS = {
       ROOM_MESSAGE: "ROOM_MESSAGE",
     },
   };
-
+interface guest {
+  guest:{name:string, id:string};
+}
 const roomId = nanoid(); 
-
+let guest = {name:'', id:''};
 function socket({ io }: { io: Server }) {
     logger.info(`Sockets enabled`);
 
@@ -25,11 +29,18 @@ function socket({ io }: { io: Server }) {
 
         socket.on(EVENTS.CLIENT.JOIN_ROOM, (val)=>{
             socket.join(roomId)
-            logger.info(`User connected ${val}`);
-            if(val!=undefined) socket.to(roomId).emit(EVENTS.SERVER.GUEST, {name:val.name});
-            socket.emit(EVENTS.SERVER.JOINED_ROOM)
+            if(val!=undefined) {
+              socket.to(roomId).emit(EVENTS.SERVER.GUEST, {name:val.name});
+              socket.emit(EVENTS.SERVER.JOINED_ROOM);
+              guest['name']=val.name;
+            }
+            else {
+              socket.emit(EVENTS.SERVER.JOINED_ROOM, {guest})
+            }
         })
-
+        // socket.on(EVENTS.disconnecting, ()=>{
+        //   logger.info(`User disconected ${socket.id} karta salam`);
+        // })
         socket.on(EVENTS.CLIENT.SEND_ROOM_MESSAGE, ({message, username, usertype})=>{
             const date = new Date();
 

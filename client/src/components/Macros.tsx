@@ -20,9 +20,9 @@ const Macros : React.FC<FuncProp> = ({onclick}) => {
         <MacrosContainer>
             <MacrosWrapper>
                 <Title>Macros</Title>
-                <div style={{display:'flex', flexDirection:'row', gap:8, height:70, overflow:'auto', paddingBottom:14}}>
+                <List>
                     {templates.map((item, index)=><Item key={`${index}${item}`} onClick={()=>onclick(item)}><p style={{fontSize:12, margin:0}}>{item}</p></Item>)}
-                </div>
+                </List>
             </MacrosWrapper>
         </MacrosContainer>
     )
@@ -35,6 +35,14 @@ const MacrosContainer =  styled.div`
     border-radius: 8px 8px 0 0;
     margin: 0 8px 0 8px;
     background-color: #1616160A;
+    @media only screen and (min-width: 712px) {
+        position: absolute;
+        height: calc(100% - 24px);
+        width: calc(100% - 800px);
+        border-radius:8px;
+        top:8px;
+        right:0;
+}
 `
 const MacrosWrapper = styled.div`
     background: white;
@@ -42,21 +50,38 @@ const MacrosWrapper = styled.div`
     border-radius: 8px;
     overflow: auto;
     flex-shrink:0;
+    @media only screen and (min-width: 712px) {
+        height: calc(100% - 24px);
+    }
+`
+const List = styled.div`
+    display:flex;
+    flex-direction:row; 
+    gap:8px;
+    height:70px;
+    overflow:auto;
+    padding-bottom:14px;
+    @media only screen and (min-width: 712px) {
+        flex-direction: column;
+        height: 100%;
+    }
 `
 const Title = styled.h4`
     margin:0 0 8px 0;
-    font-weight: 600px;
+    font-weight: 600;
     font-size: 13px;
     text-align: left !important;
 `
 const Item = styled.div`
     display: flex;
     align-items: center;
+    text-align:left;
     min-width: 200px;
     height: 54px;
     border-radius: 8px;
     padding: 8px;
     background: rgba(22, 22, 22, 0.04);
+    cursor: pointer;
 `
 
 export default Macros

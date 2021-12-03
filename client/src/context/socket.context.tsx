@@ -15,7 +15,6 @@ interface Context {
   setUsertype: Function;
   guest?:string;
   setGuest:Function;
-  // rooms: object;
 }
 const SocketContext = createContext<Context>({
   socket,
@@ -31,10 +30,10 @@ function SocketsProvider(props: any) {
   const [usertype, setUsertype] = useState('');
   const [messages, setMessages] = useState([]);
   const [guest, setGuest] = useState('');
-  socket.on(EVENTS.SERVER.JOINED_ROOM, ()=>{
+  socket.on(EVENTS.SERVER.JOINED_ROOM, (val)=>{
+    if(val!==undefined) setGuest(val.guest);
     setMessages([]);
   })
-
   socket.on(EVENTS.SERVER.ROOM_MESSAGE, ({message, username,time, usertype})=>{
     setMessages([
       ...messages,

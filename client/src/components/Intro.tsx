@@ -14,7 +14,6 @@ const Intro = () => {
             return
         }
         setUsername(value);
-        setGuest(value);
         setUsertype('Client');
         socket.emit(EVENTS.CLIENT.JOIN_ROOM, {name:value});
         usernameRef.current.value='';

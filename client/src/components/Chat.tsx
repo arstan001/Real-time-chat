@@ -15,7 +15,7 @@ interface Props {
 const Chat = () => {
     const {socket, username, usertype, messages, setMessages} = useSockets();
     const newMessageRef = useRef(null);
-    const scrollRef = useRef(null);
+    // const scrollRef = useRef(null);
     function handleSendMessage() {
         const message = newMessageRef.current.value;
         var format = /[`!@#$%^&*()_+\-=\[\]{};':"\\|<>\/?~]/;
@@ -48,7 +48,6 @@ const Chat = () => {
         return false
     }
     if(!username) return <Intro/>
-   
     return(
         <Wrapper>
             <ChatContainer admin={usertype==='Admin'}>
@@ -66,7 +65,7 @@ const Chat = () => {
                     })}
                 </div>
             </ChatContainer> 
-            <div style={{marginBottom:8}}>
+            <div style={{marginBottom:8}}>  
                 {usertype==='Admin' && <Macros onclick={(val)=>newMessageRef.current.value=val}/>}
                 <InputContainer admin={usertype==='Admin'}>
                     <InputWrapper>
@@ -126,6 +125,10 @@ const ChatContainer = styled.div<Props>`
     background-color: ${colors.gray};
     border-radius: 8px;
     box-sizing: border-box;
+    @media only screen and (min-width: 712px) {
+        height: calc(100vh - 157px);   
+        max-width:${props=>!props.admin && '100%'};  
+}
 `
 const ChatHeader = styled.div`
     height: 42px;
@@ -152,10 +155,17 @@ const InputText = styled.textarea`
 `
 const InputContainer = styled.div<Props>`
     min-width: 288px;
+    max-width: 742px;
     padding: ${props => props.admin ? '0 8px 8px 8px' : '8px'};
     border-radius: ${props => props.admin ? '0 0 8px 8px' : '8px'};
     margin:0 8px 0 8px;
     background-color: #1616160A;
+    @media only screen and (min-width: 712px) {
+    padding: 8px;  
+    border-radius: 8px;
+    max-width:${props=>!props.admin && '100%'};  
+
+}
 `
 const InputWrapper = styled.div`
     display: block;
