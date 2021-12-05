@@ -38,7 +38,8 @@ const MacrosContainer =  styled.div`
     @media only screen and (min-width: 712px) {
         position: absolute;
         height: calc(100% - 24px);
-        width: calc(100% - 800px);
+        width: calc(100% - 798px);   
+        /* max-width: 450px; */
         border-radius:8px;
         top:8px;
         right:0;

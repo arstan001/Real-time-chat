@@ -10,7 +10,6 @@ import clip from '../utils/clip.svg'
 import profile from '../utils/profile.svg'
 import admin from '../utils/Admin.svg'
 interface Props {
-    withName?:boolean;
     isMe?:boolean;
     admin?:boolean;
     isLast?:boolean;
@@ -65,8 +64,8 @@ const Chat = () => {
                     </ChatHeader>
                 <div>
                     {messages.map((message, index)=>{
-                        return <MessageContainer key={index} withName={isNext(index)} isMe={message.username===username}>
-                            {isNext(index) && <p style={{margin:'8px 0'}}>{message.usertype==='Admin' ? `${message.username} - Cartloop` : message.username}</p>}
+                        return <MessageContainer key={index} isLast={isLast(index)} isMe={message.username===username}>
+                            {isNext(index) && <p style={{margin:`8px 0`, padding:`${isNext(index) ? isLast(index) ? '0 24px 0 0' :'0' : '0'}`}}>{message.usertype==='Admin' ? `${message.username} - Cartloop` : message.username}</p>}
                             <div style={{display:'flex', flexDirection:'row', alignItems:'center', justifyContent:`${message.username===username ? 'right' : 'left'} `}}>
                             <MessageWrapper>
                                 <Message isMe={message.username===username} admin={message.usertype==='Admin'}>{message.message}</Message>
@@ -101,9 +100,7 @@ const Chat = () => {
 }
 
 const MessageContainer = styled.div<Props>`
-    ${props=>props.isMe ? {textAlign:'right', padding:'0px 16px 4px 16px'} : {textAlign:'left', padding:'0 16px 4px 16px'}};
-    ${props=>props.withName && props.isMe ? {padding:'0px 16px 4px 16px'} : {padding:'0px 16px 4px 16px'}}
-
+    ${props=>props.isMe ? {textAlign:'right', padding:`0px ${props.isLast ? '16' : '40'}px 4px 16px`} : {textAlign:'left', padding:'0 16px 4px 16px'}};
 `
 const MessageWrapper = styled.div`
     display: inline-block;
@@ -113,7 +110,7 @@ const Message = styled.p<Props>`
     border-radius: 8px 8px 4px 4px;
     text-align:left;
     background: ${props=>props.isMe ? colors.main : 'white'};
-    margin: ${props=>props.admin ? '0' : '0 40px 0 0'};
+    margin: 0;
     ${props=>props.isMe && {color:'white'}}
 `
 const Header = styled.p`
