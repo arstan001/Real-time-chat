@@ -35,7 +35,7 @@ function socket({ io }: { io: Server }) {
               guest['name']=val.name;
             }
             else {
-              socket.emit(EVENTS.SERVER.JOINED_ROOM, {guest})
+              socket.emit(EVENTS.SERVER.JOINED_ROOM, {guest:guest.name})
             }
         })
         // socket.on(EVENTS.disconnecting, ()=>{

@@ -5,11 +5,15 @@ import { useRef } from "react";
 import EVENTS from "../config/evets";
 import Macros from "./Macros";
 import colors from "../config/color";
-
+import smile from '../utils/smile.svg'
+import clip from '../utils/clip.svg'
+import profile from '../utils/profile.svg'
+import admin from '../utils/Admin.svg'
 interface Props {
     withName?:boolean;
     isMe?:boolean;
     admin?:boolean;
+    isLast?:boolean;
 }
 
 const Chat = () => {
@@ -43,9 +47,14 @@ const Chat = () => {
       }
 
     function isNext(index:number) {
-        if(index===0) return true
-        else if(messages[index-1].username!==messages[index].username) return true
-        return false
+        if(index===0) return true;
+        else if(messages[index-1].username!==messages[index].username) return true;
+        return false;
+    }
+    function isLast(index:number){
+        if(index===messages.length-1) return true;
+        else if(messages[index+1].username!==messages[index].username) return true;
+        return false;
     }
     if(!username) return <Intro/>
     return(
@@ -58,9 +67,13 @@ const Chat = () => {
                     {messages.map((message, index)=>{
                         return <MessageContainer key={index} withName={isNext(index)} isMe={message.username===username}>
                             {isNext(index) && <p style={{margin:'8px 0'}}>{message.usertype==='Admin' ? `${message.username} - Cartloop` : message.username}</p>}
+                            <div style={{display:'flex', flexDirection:'row', alignItems:'center', justifyContent:`${message.username===username ? 'right' : 'left'} `}}>
                             <MessageWrapper>
-                                <Message isMe={message.username===username}>{message.message}</Message>
+                                <Message isMe={message.username===username} admin={message.usertype==='Admin'}>{message.message}</Message>
                             </MessageWrapper>
+                            {isLast(index) && message.usertype!=='Admin' && <img src={smile} alt=':)' width={16} height={16} style={{marginLeft:12, cursor:'pointer'}}/>}
+                            {isLast(index) && <img src={message.usertype!=='Admin' ? profile : admin} alt=' ' width={16} height={16} style={{marginLeft:8, cursor:'pointer'}}/>}
+                            </div>
                         </MessageContainer>
                     })}
                 </div>
@@ -74,9 +87,9 @@ const Chat = () => {
                         </div>
                         <Options>
                             <div style={{display:"flex", alignItems:'center'}}>
-                                <Button style={{background:' #E75818', width:24, height:24, borderRadius:12, color:'white', fontSize:16, marginRight:40}} onClick={handleSendMessage}>+</Button>
-                                <Button style={{marginRight:16}} onClick={handleSendMessage}>--</Button>
-                                <Button onClick={handleSendMessage}>::</Button>
+                                <Button style={{background:' #E75818', width:24, height:24, borderRadius:12, color:'white', fontSize:16, marginRight:36}} onClick={handleSendMessage}>+</Button>
+                                <Button style={{padding:0}} onClick={handleSendMessage}><img src={clip} alt=':)' width={16} height={16} style={{display:'flex'}}/></Button>
+                                <Button style={{marginLeft:16, padding:0}} onClick={handleSendMessage}><img src={smile} alt=':)' width={16} height={16} style={{display:'flex'}}/></Button>
                             </div>
                             <Button style={{background:' #E75818', color:'white', borderRadius:4,padding:8}} onClick={handleSendMessage}>Resolve</Button>
                         </Options>
@@ -98,8 +111,9 @@ const MessageWrapper = styled.div`
 const Message = styled.p<Props>`
     padding:8px;
     border-radius: 8px 8px 4px 4px;
+    text-align:left;
     background: ${props=>props.isMe ? colors.main : 'white'};
-    margin: 0;
+    margin: ${props=>props.admin ? '0' : '0 40px 0 0'};
     ${props=>props.isMe && {color:'white'}}
 `
 const Header = styled.p`
@@ -182,5 +196,6 @@ const Button = styled.button`
     background: none;
     border:none;
     outline:none;
+    cursor: pointer;
 `
 export default Chat
