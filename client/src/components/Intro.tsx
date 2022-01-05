@@ -1,37 +1,62 @@
 import { useSockets } from "../context/socket.context";
 import styled from 'styled-components';
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import EVENTS from "../config/evets";
-import colors from "../config/color";
-
+interface Props{
+    back?:boolean;
+    shown?:boolean;
+}
 const Intro = () => {
-    const {socket, setUsername, setUsertype, setGuest} = useSockets();
-    
+    const {socket, setUsername, rooms} = useSockets();
+    const [roomType, setRoomType] = useState<string>('');
+    const [error, setError] = useState<boolean>(false)
     const usernameRef = useRef(null)
-    function handleUsername(){
-        const value = usernameRef.current.value;
-        if(!value){
-            return
+    const roomRef= useRef(null)
+    useEffect(()=>{
+        if(usernameRef) usernameRef.current.value = localStorage.getItem('username') || '';
+    },[])
+    function handleUsername(type:string){
+        if(usernameRef.current?.value.length < 1){
+            setError(true);
         }
-        setUsername(value);
-        setUsertype('Client');
-        socket.emit(EVENTS.CLIENT.JOIN_ROOM, {name:value});
-        usernameRef.current.value='';
+        else {
+            setError(false);
+            if(roomType===''){
+                setRoomType(type)
+            }
+            else if(roomType==='CREATE') {
+                const value = roomRef.current.value;
+                if(!value){
+                    return
+                }
+                socket.emit(EVENTS.CLIENT.CREATE_ROOM, {roomName:value});
+                setUsername(usernameRef.current.value);
+                localStorage.setItem('username', usernameRef.current.value);
+                usernameRef.current.value='';
+                roomRef.current.value='';
+            }
+            else if(roomType==='ENTER'){
+                const value = roomRef.current.value;
+                socket.emit(EVENTS.CLIENT.JOIN_ROOM, value);
+                localStorage.setItem('username', usernameRef.current.value);
+                setUsername(usernameRef.current.value);
+                usernameRef.current.value='';
+                roomRef.current.value='';
+            }
     }
-    function handleAdmin(){
-        setUsername('Admin');
-        setUsertype('Admin');
-        socket.emit(EVENTS.CLIENT.JOIN_ROOM);
-        usernameRef.current.value='';
     }
     return(
         <Wrapper>
-            <Input>
-                <h1>Welcome to Chat!</h1>
-                <Name ref={usernameRef} placeholder='Enter Username'/>
-                <Button onClick={handleUsername}>Start</Button>
-            </Input>
-            <AdminButton onClick={handleAdmin}>admin</AdminButton>
+            <InputWrapper>
+                <Title>Welcome to Chat!</Title>
+                <Input ref={usernameRef} shown placeholder='Enter Username'/>
+                <Input ref={roomRef} shown={roomType!==''} placeholder={`Enter Room ${roomType==='CREATE' ? 'NAME' : 'ID'}`}/>
+                <Button shown={(roomType==='' || roomType==='ENTER')} onClick={()=>handleUsername('ENTER')}>Enter Room</Button>
+                <Or shown={roomType===''}>{roomType==='' && 'or'}</Or>
+                <Button shown={(roomType==='' || roomType==='CREATE')} onClick={()=>handleUsername('CREATE')}>{(roomType==='' || roomType==='CREATE') && 'Create a Room'}</Button>
+                <Button shown={roomType!==''} onClick={()=>setRoomType('')} back={true}>{roomType!=='' && 'Go Back'}</Button>
+            </InputWrapper>
+                {error && <Error>Please enter the name first!</Error>}
         </Wrapper>
     )
 }
@@ -45,41 +70,59 @@ const Wrapper = styled.div`
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: #161616 ;
+    background-color: var(--default);
 `
-const Input = styled.div`
-    width: 300px;
+const Error = styled.p`
+margin-top: 12px;
+    color:var(--red);
+`
+const InputWrapper = styled.div`
+    width: 324px;
     /* height: 100px; */
+    position: relative;
     display: flex;
     padding: 24px;
     flex-direction: column;
     border-radius: 8px;
-    background-color: #E75818 ;
+    background-color: var(--primary) ;
 `
-
-const Name = styled.input`
+const Title = styled.h1`
+    color:#fff;
+    margin-bottom: 12px;
+    width: 100%;
+    
+`
+const Input = styled.input<Props>`
     border:none;
+    width:  100%;
     height: 30px;
-    margin: 0px 24px 22px 24px;
+    margin-bottom: 12px;
     border-radius: 8px;
     padding: 0 12px;
     outline: none;
+    ${props=>!props.shown && {display:'none'}}
+    transition: all 0.1s ease-in-out;
 `
-const Button = styled.button`
+const Or = styled.p<Props>`
+    ${props=>!props.shown && {display:'none'}}
+    transition: all 0.1s ease-in-out;
+    font-size: 14px;
+    color:#fff;
+    margin-top: 4px;
+    margin-bottom: 4px;
+`
+const Button= styled.button<Props>`
     border:none;
-    width: 60px;
+    width: 100%;
     height: 30px;
-    margin-left: auto;
-    margin-right: auto;
     border-radius: 8px;
     cursor: pointer;
-`
-const AdminButton = styled.button`
-    background: none;
-    border:none;
-    cursor: pointer;
-    color:${colors.darkGray};
-    margin-top: 12px;
-    margin-bottom: -12px;
+    ${props=>props.back && {background:'var(--red)', color:'#fff', width:'30%', marginLeft:'auto', marginRight:'auto', marginTop:'12px'}}
+    ${props=>!props.shown && {display:'none'}}
+    transition: all 0.1s ease-in-out;
+    &:hover{
+        background: ${props=>props.back ? 'var(--default)' : 'var(--hover)'};
+        color:#fff;
+    }
 `
 export default Intro

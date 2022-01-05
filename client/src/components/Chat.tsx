@@ -1,34 +1,28 @@
 import { useSockets } from "../context/socket.context";
 import styled from 'styled-components';
 import Intro from "./Intro";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import EVENTS from "../config/evets";
-import Macros from "./Macros";
 import colors from "../config/color";
 import smile from '../utils/smile.svg'
 import clip from '../utils/clip.svg'
-import profile from '../utils/profile.svg'
-import admin from '../utils/Admin.svg'
 interface Props {
     isMe?:boolean;
     admin?:boolean;
     isLast?:boolean;
+    shown?:boolean;
 }
 
 const Chat = () => {
-    const {socket, username, usertype, messages, setMessages} = useSockets();
+    const {socket, username, messages, setMessages, roomId} = useSockets();
     const newMessageRef = useRef(null);
+    const [shown, setShown] = useState(false);
+    console.log(socket.id)
     // const scrollRef = useRef(null);
     function handleSendMessage() {
         const message = newMessageRef.current.value;
-        var format = /[`!@#$%^&*()_+\-=\[\]{};':"\\|<>\/?~]/;
-
-        
-        if (!String(message).trim() || format.test(message)) {
-          return alert('Did not pass message validation ;(');
-        }
-    
-        socket.emit(EVENTS.CLIENT.SEND_ROOM_MESSAGE, { message, username, usertype });
+        if(message==='') return
+        socket.emit(EVENTS.CLIENT.SEND_ROOM_MESSAGE, { roomId, message, username});
     
         const date = new Date();
     
@@ -37,8 +31,10 @@ const Chat = () => {
           {
             username: username,
             message,
-            time: `${date.getHours()}:${date.getMinutes()}`,
-            usertype:usertype
+            time: `${date.getHours()}:${date.getMinutes()<10 ? `0${date.getMinutes()}` : date.getMinutes()}`,
+            userId:socket.id,
+            file:false,
+            fileUrl:null
           },
         ]);
     
@@ -58,39 +54,35 @@ const Chat = () => {
     if(!username) return <Intro/>
     return(
         <Wrapper>
-            <ChatContainer admin={usertype==='Admin'}>
+            <ChatContainer>
                     <ChatHeader>
-                        <Header>In progress...</Header>
+                        <Header>Chat id: {roomId}</Header>
                     </ChatHeader>
                 <div>
                     {messages.map((message, index)=>{
-                        return <MessageContainer key={index} isLast={isLast(index)} isMe={message.username===username}>
-                            {isNext(index) && <p style={{margin:`8px 0`, padding:`${isNext(index) ? isLast(index) ? '0 24px 0 0' :'0' : '0'}`}}>{message.usertype==='Admin' ? `${message.username} - Cartloop` : message.username}</p>}
-                            <div style={{display:'flex', flexDirection:'row', alignItems:'center', justifyContent:`${message.username===username ? 'right' : 'left'} `}}>
-                            <MessageWrapper>
-                                <Message isMe={message.username===username} admin={message.usertype==='Admin'}>{message.message}</Message>
+                        return <MessageContainer key={index} isLast={isLast(index)} isMe={message.userId===socket.id}>
+                            {isNext(index) && <p style={{margin:`8px 0`, padding:`0`}}>{message.username}</p>}
+                            <MessageWrapper isMe={message.userId===socket.id}>
+                                <Message isMe={message.userId===socket.id}>{message.message}</Message>
+                                {isLast(index) && <PTime>{message.time}</PTime>}
                             </MessageWrapper>
-                            {isLast(index) && message.usertype!=='Admin' && <img src={smile} alt=':)' width={16} height={16} style={{marginLeft:12, cursor:'pointer'}}/>}
-                            {isLast(index) && <img src={message.usertype!=='Admin' ? profile : admin} alt=' ' width={16} height={16} style={{marginLeft:8, cursor:'pointer'}}/>}
-                            </div>
                         </MessageContainer>
                     })}
                 </div>
             </ChatContainer> 
             <div style={{marginBottom:8}}>  
-                {usertype==='Admin' && <Macros onclick={(val)=>newMessageRef.current.value=val}/>}
-                <InputContainer admin={usertype==='Admin'}>
+                <InputContainer>
                     <InputWrapper>
                         <div style={{display:'flex', marginBottom:16}}>
                             <InputText placeholder='Message...' ref={newMessageRef} rows={1}/>
                         </div>
                         <Options>
-                            <div style={{display:"flex", alignItems:'center'}}>
-                                <Button style={{background:' #E75818', width:24, height:24, borderRadius:12, color:'white', fontSize:16, marginRight:36}} onClick={handleSendMessage}>+</Button>
-                                <Button style={{padding:0}} onClick={handleSendMessage}><img src={clip} alt=':)' width={16} height={16} style={{display:'flex'}}/></Button>
-                                <Button style={{marginLeft:16, padding:0}} onClick={handleSendMessage}><img src={smile} alt=':)' width={16} height={16} style={{display:'flex'}}/></Button>
-                            </div>
-                            <Button style={{background:' #E75818', color:'white', borderRadius:4,padding:8}} onClick={handleSendMessage}>Resolve</Button>
+                            <ButtonWrapper shown={shown}>
+                                {/* <div style={{width:24, marginRight:shown ? 24 : 0, transition:'all 0.2s ease-in-out'}}><Button style={{background:' #E75818', width:24, height:24, borderRadius:12, color:'white', fontSize:16}} onClick={()=> setShown(!shown)}>{ shown ? '-' : '+' }</Button></div> */}
+                                {/* <Button style={{padding:0}} onClick={handleFileUpload}><img src={clip} alt=':)' width={16} height={16} style={{display:'flex'}}/></Button> */}
+                                {/* <Button style={{marginLeft:16, padding:0}} onClick={handleSendMessage}><img src={smile} alt=':)' width={16} height={16} style={{display:'flex'}}/></Button> */}
+                            </ButtonWrapper>
+                            <Button style={{background:' #E75818', color:'white', borderRadius:4,padding:8}} onClick={handleSendMessage}>Send</Button>
                         </Options>
                     </InputWrapper>
                 </InputContainer>
@@ -100,18 +92,38 @@ const Chat = () => {
 }
 
 const MessageContainer = styled.div<Props>`
-    ${props=>props.isMe ? {textAlign:'right', padding:`0px ${props.isLast ? '16' : '40'}px 4px 16px`} : {textAlign:'left', padding:'0 16px 4px 16px'}};
+    position:relative;
+    width:100%;
+    overflow:hidden;
+    ${props=>props.isMe ? {textAlign:'right', padding:`0px 16px 4px 16px`} : {textAlign:'left', padding:'0 16px 4px 16px'}};
 `
-const MessageWrapper = styled.div`
-    display: inline-block;
+const MessageWrapper = styled.div<Props>`
+    display: flex;
+    position:relative;
+    flex-wrap: wrap;
+    ${props=>props.isMe && {flexDirection:'row-reverse'}}
+    align-items: center;
+    // overflow-wrap: break-word;
 `
 const Message = styled.p<Props>`
     padding:8px;
+    display:block;
+    max-width:50%;
+    word-wrap:break-word;
+    white-space: normal;
     border-radius: 8px 8px 4px 4px;
     text-align:left;
     background: ${props=>props.isMe ? colors.main : 'white'};
     margin: 0;
     ${props=>props.isMe && {color:'white'}}
+`
+const ButtonWrapper = styled.div<Props>`
+    width: ${props=>props.shown ? '100%' : '24px'};
+    overflow:hidden;
+    transition:all 0.2s ease-in-out;
+    display:flex;
+    align-items: center;
+
 `
 const Header = styled.p`
     margin:0;
@@ -189,7 +201,11 @@ const Options = styled.div`
     justify-content: space-between;
     align-items: center;
 `
-const Button = styled.button`
+const PTime = styled.p`
+    font-size: 9px;
+    margin: 0 8px;
+`
+const Button = styled.button`   
     background: none;
     border:none;
     outline:none;

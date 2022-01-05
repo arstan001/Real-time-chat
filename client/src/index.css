@@ -6,6 +6,17 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+*{
+  --default:#23272a;
+  --primary:#5865f2;
+  --red:#de2761;
+  --hover: linear-gradient(90deg,#8ea1e1,#7289da);
+  margin:0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Encode Sans Expanded', sans-serif;
+  font-family: 'Nunito', sans-serif;
+}
 ::-webkit-scrollbar {
   -webkit-appearance: none;
   width: 2px;

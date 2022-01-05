@@ -7,48 +7,48 @@ const EVENTS = {
     disconnecting:'disconnecting',
     CLIENT: {
       SEND_ROOM_MESSAGE: "SEND_ROOM_MESSAGE",
+      CREATE_ROOM:'CREATE_ROOM',
       JOIN_ROOM: "JOIN_ROOM",
       LEAVE_ROOM:'LEAVE_ROOM'
     },
     SERVER: {
       JOINED_ROOM: "JOINED_ROOM",
+      ROOMS:'ROOMS',
       GUEST:'GUEST',
       ROOM_MESSAGE: "ROOM_MESSAGE",
     },
   };
-interface guest {
-  guest:{name:string, id:string};
-}
-const roomId = nanoid(); 
-let guest = {name:'', id:''};
+
+const rooms:Record<string, {name:string}> = {}
 function socket({ io }: { io: Server }) {
     logger.info(`Sockets enabled`);
 
     io.on(EVENTS.connection, (socket: Socket) => {
         logger.info(`User connected ${socket.id}`);
 
-        socket.on(EVENTS.CLIENT.JOIN_ROOM, (val)=>{
+        socket.on(EVENTS.CLIENT.CREATE_ROOM, ({roomName})=>{
+          const roomId = nanoid();
+          rooms[roomId]={name:roomName};
+          socket.join(roomId);
+          socket.broadcast.emit(EVENTS.SERVER.ROOMS, rooms)
+          socket.emit(EVENTS.SERVER.ROOMS, rooms)
+          socket.emit(EVENTS.SERVER.JOINED_ROOM, roomId)
+        })
+
+        socket.on(EVENTS.CLIENT.JOIN_ROOM, (roomId)=>{
             socket.join(roomId)
-            if(val!=undefined) {
-              socket.to(roomId).emit(EVENTS.SERVER.GUEST, {name:val.name});
-              socket.emit(EVENTS.SERVER.JOINED_ROOM);
-              guest['name']=val.name;
-            }
-            else {
-              socket.emit(EVENTS.SERVER.JOINED_ROOM, {guest:guest.name})
-            }
+            socket.emit(EVENTS.SERVER.JOINED_ROOM, roomId)
         })
         // socket.on(EVENTS.disconnecting, ()=>{
         //   logger.info(`User disconected ${socket.id} karta salam`);
         // })
-        socket.on(EVENTS.CLIENT.SEND_ROOM_MESSAGE, ({message, username, usertype})=>{
+        socket.on(EVENTS.CLIENT.SEND_ROOM_MESSAGE, ({message, roomId, username})=>{ 
             const date = new Date();
-
             socket.to(roomId).emit(EVENTS.SERVER.ROOM_MESSAGE, {
                 message,
                 username,
-                time: `${date.getHours()}:${date.getMinutes()}`,
-                usertype
+                time: `${date.getHours()}:${date.getMinutes()<10 ? `0${date.getMinutes()}` : date.getMinutes()}`,
+                userId:socket.id
             })
         })
 
