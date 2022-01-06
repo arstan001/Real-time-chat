@@ -116,6 +116,9 @@ const Message = styled.p<Props>`
     background: ${props=>props.isMe ? colors.main : 'white'};
     margin: 0;
     ${props=>props.isMe && {color:'white'}}
+    @media screen and (max-width:480px){
+        max-width:100%;
+    }
 `
 const ButtonWrapper = styled.div<Props>`
     width: ${props=>props.shown ? '100%' : '24px'};
