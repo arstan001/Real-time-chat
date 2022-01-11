@@ -1,5 +1,5 @@
 export default {
-    corsOrigin: "http://localhost:3000",
-    port: 4000,
-    host: "localhost",
+    corsOrigin: "https://compassionate-jackson-5905cb.netlify.app",
+    port: process.env.PORT || 4000,
+    host: process.env.HOST || "localhost",
   };
